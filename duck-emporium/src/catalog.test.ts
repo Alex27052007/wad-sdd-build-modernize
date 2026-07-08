@@ -12,6 +12,7 @@ import {
   listDucks,
   loadCatalog,
   saveCatalog,
+  selectDuckOfTheDay,
 } from "./catalog.js";
 import { assertDuck, type Duck } from "./duck.js";
 
@@ -242,6 +243,44 @@ describe("handleAdminAddDuck", () => {
     if (result.ok) {
       expect(result.duck.name).toBe("Admin Duck");
     }
+  });
+});
+
+describe("selectDuckOfTheDay", () => {
+  const ducks = [
+    fixtureDuck({ id: "a", name: "Alpha", stock: 3 }),
+    fixtureDuck({ id: "b", name: "Beta", stock: 1 }),
+    fixtureDuck({ id: "c", name: "Gamma", stock: 0 }),
+  ];
+
+  it("returns the same duck for the same day key and a different duck for a different day key", () => {
+    const first = selectDuckOfTheDay(ducks, "2026-07-08");
+    const repeated = selectDuckOfTheDay(ducks, "2026-07-08");
+    const other = selectDuckOfTheDay(ducks, "2026-07-09");
+
+    expect(first).toEqual(repeated);
+    expect(first.ok).toBe(true);
+    if (first.ok && other.ok) {
+      expect(first.duck.id).toBeDefined();
+      expect(other.duck.id).toBeDefined();
+      expect(first.duck.id).not.toBe(other.duck.id);
+    }
+  });
+
+  it("skips sold-out ducks and returns the fallback when none are eligible", () => {
+    const soldOutOnly = [fixtureDuck({ id: "s1", name: "Sold Out", stock: 0 })];
+    const result = selectDuckOfTheDay(ducks, "2026-07-10");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.duck.stock).toBeGreaterThan(0);
+    }
+    expect(selectDuckOfTheDay(soldOutOnly, "2026-07-10")).toEqual({ ok: false, message: "The pond is empty today, come back tomorrow." });
+  });
+
+  it("does not mutate the input catalog", () => {
+    const original = [...ducks];
+    selectDuckOfTheDay(ducks, "2026-07-11");
+    expect(ducks).toEqual(original);
   });
 });
 

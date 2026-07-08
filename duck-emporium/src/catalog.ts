@@ -42,9 +42,13 @@ export interface AdminAddDuckRequest {
   payload: CreateDuckInput;
 }
 
-export interface AdminAddDuckResponse extends AddDuckResult {
-  status?: number;
-}
+export type AdminAddDuckResponse =
+  | { ok: true; duck: Duck; status?: number }
+  | { ok: false; message: string; status?: number };
+
+export type DuckOfTheDayResult =
+  | { ok: true; duck: Duck }
+  | { ok: false; message: string };
 
 function normalizeName(value: string): string {
   return value.trim().toLowerCase();
@@ -226,6 +230,29 @@ export function handleAdminAddDuck(
   }
 
   return addDuckToCatalog(request.payload, catalog, filePath, logger);
+}
+
+export function selectDuckOfTheDay(ducks: Duck[], dayKey: string): DuckOfTheDayResult {
+  const eligible = ducks.filter((duck) => duck.stock > 0);
+  if (eligible.length === 0) {
+    return {
+      ok: false,
+      message: "The pond is empty today, come back tomorrow.",
+    };
+  }
+
+  const hash = Array.from(dayKey).reduce((value, char) => {
+    return (value * 31 + char.charCodeAt(0)) >>> 0;
+  }, 0);
+  const index = hash % eligible.length;
+  const duck = eligible[index];
+  if (duck === undefined) {
+    return {
+      ok: false,
+      message: "The pond is empty today, come back tomorrow.",
+    };
+  }
+  return { ok: true, duck };
 }
 
 /** All ducks in catalog order, including out-of-stock ones. With no
