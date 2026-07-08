@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   CatalogLoadError,
   DEFAULT_SEED_PATH,
+  filterDucks,
   getDuckById,
   listDucks,
   loadCatalog,
@@ -90,6 +91,38 @@ describe("listDucks", () => {
 
   it("zero-arg form loads the real seed", () => {
     expect(listDucks().length).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe("filterDucks", () => {
+  const ducks = [
+    fixtureDuck({ id: "philosopher", name: "Philosopher Duck", category: "classic", price: 12.5, tagline: "Contemplates life.", description: "A reflective duck with a velvet stare." }),
+    fixtureDuck({ id: "pirate", name: "Pirate Duck", category: "pirate", price: 19.99, tagline: "Arrr and sparkle.", description: "A swashbuckling duck with a treasure map." }),
+    fixtureDuck({ id: "winter", name: "Winter Duck", category: "seasonal", price: 8.75, tagline: "Warm and cozy.", description: "A seasonal duck for chilly days." }),
+  ];
+
+  it("matches free text case-insensitively across name, tagline, and description", () => {
+    expect(filterDucks(ducks, { query: "reflective" }).map((d) => d.id)).toEqual(["philosopher"]);
+    expect(filterDucks(ducks, { query: "ARRR" }).map((d) => d.id)).toEqual(["pirate"]);
+  });
+
+  it("filters by one or more categories", () => {
+    expect(filterDucks(ducks, { categories: ["classic", "pirate"] }).map((d) => d.id)).toEqual(["philosopher", "pirate"]);
+  });
+
+  it("applies inclusive min and max price bounds", () => {
+    expect(filterDucks(ducks, { minPrice: 10, maxPrice: 15 }).map((d) => d.id)).toEqual(["philosopher"]);
+  });
+
+  it("combines search, category, and price filters with AND semantics", () => {
+    expect(filterDucks(ducks, { query: "duck", categories: ["classic"], minPrice: 10 }).map((d) => d.id)).toEqual(["philosopher"]);
+  });
+
+  it("returns a new array and does not mutate the input ducks", () => {
+    const original = [...ducks];
+    const result = filterDucks(ducks, { query: "duck" });
+    expect(result).not.toBe(ducks);
+    expect(ducks).toEqual(original);
   });
 });
 

@@ -16,6 +16,50 @@ export class CatalogLoadError extends Error {
   }
 }
 
+export interface DuckFilters {
+  query?: string;
+  categories?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+}
+
+/** Returns a new array containing only ducks that satisfy all enabled
+ *  filters. The input catalog is never mutated. */
+export function filterDucks(ducks: Duck[], filters: DuckFilters = {}): Duck[] {
+  const query = filters.query?.trim().toLowerCase();
+  const categories = (filters.categories ?? [])
+    .map((category) => category.trim().toLowerCase())
+    .filter((category) => category.length > 0);
+
+  return ducks.filter((duck) => {
+    if (query) {
+      const haystack = [duck.name, duck.tagline, duck.description]
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(query)) {
+        return false;
+      }
+    }
+
+    if (categories.length > 0) {
+      const category = duck.category.trim().toLowerCase();
+      if (!categories.includes(category)) {
+        return false;
+      }
+    }
+
+    if (filters.minPrice !== undefined && duck.price < filters.minPrice) {
+      return false;
+    }
+
+    if (filters.maxPrice !== undefined && duck.price > filters.maxPrice) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 /** Reads and validates a seed file. Throws CatalogLoadError naming the
  *  file and the specific problem (missing file, invalid JSON, not an
  *  array, bad record, duplicate id). An empty array is valid. */

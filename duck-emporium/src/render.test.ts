@@ -84,6 +84,11 @@ describe("renderCatalog", () => {
     const rendered = renderCatalog([]);
     expect(rendered).toBe("The pond is empty — no ducks in the catalog yet.");
   });
+
+  it("renders a custom empty-state message for filtered results", () => {
+    const rendered = renderCatalog([], "No duck matches your existential criteria.");
+    expect(rendered).toBe("No duck matches your existential criteria.");
+  });
 });
 
 describe("renderCart", () => {

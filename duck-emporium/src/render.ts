@@ -36,9 +36,12 @@ export function stockLabel(stock: number): string {
 /** One line per duck, starting with the id (the key for detail lookups):
  *  "captain-quackbeard — Captain Quackbeard (pirate) — 14,99 € — tagline".
  *  For an empty list returns the explicit empty-state message. */
-export function renderCatalog(ducks: Duck[]): string {
+export function renderCatalog(
+  ducks: Duck[],
+  emptyMessage: string = "The pond is empty — no ducks in the catalog yet.",
+): string {
   if (ducks.length === 0) {
-    return "The pond is empty — no ducks in the catalog yet.";
+    return emptyMessage;
   }
   return ducks
     .map(
