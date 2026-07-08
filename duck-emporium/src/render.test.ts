@@ -1,0 +1,111 @@
+import { describe, expect, it } from "vitest";
+import type { Duck } from "./duck.js";
+import {
+  formatPrice,
+  renderCatalog,
+  renderDuckDetail,
+  stockLabel,
+} from "./render.js";
+
+const gifted: Duck = {
+  id: "captain-quackbeard",
+  name: "Captain Quackbeard",
+  category: "pirate",
+  price: 14.99,
+  tagline: "Terror of the seven bathtubs.",
+  stock: 2,
+  description: "The fiercest rubber pirate on the high seas of Lake Foam.",
+  traits: ["bold", "salty"],
+  powers: ["squeaks that summon bubbles", "immune to soap"],
+};
+
+const powerless: Duck = {
+  id: "plain-jane",
+  name: "Plain Jane",
+  category: "classic",
+  price: 3.5,
+  tagline: "No frills. All duck.",
+  stock: 30,
+  description: "Just honest vulcanized craftsmanship.",
+  traits: ["honest"],
+  powers: [],
+};
+
+describe("formatPrice", () => {
+  it.each([
+    [0, "0,00 €"],
+    [0.05, "0,05 €"],
+    [4.99, "4,99 €"],
+    [14.9, "14,90 €"],
+    [1234.56, "1234,56 €"],
+  ])("formats %d as %s", (price, expected) => {
+    expect(formatPrice(price)).toBe(expected);
+  });
+
+  it.each([-1, NaN, Infinity, -Infinity])("throws on %d", (price) => {
+    expect(() => formatPrice(price)).toThrow();
+  });
+});
+
+describe("stockLabel", () => {
+  it.each([
+    [0, "Sold out"],
+    [1, "Last duck!"],
+    [2, "Only 2 left"],
+    [3, "Only 3 left"],
+    [4, "In stock"],
+    [100, "In stock"],
+  ])("labels stock %d as %s", (stock, expected) => {
+    expect(stockLabel(stock)).toBe(expected);
+  });
+
+  it.each([-1, 2.5, NaN])("throws on invalid stock %d", (stock) => {
+    expect(() => stockLabel(stock)).toThrow();
+  });
+});
+
+describe("renderCatalog", () => {
+  it("renders one line per duck: id, name, category, price, tagline", () => {
+    const lines = renderCatalog([gifted, powerless]).split("\n");
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toMatch(/^captain-quackbeard — /);
+    expect(lines[0]).toContain("Captain Quackbeard");
+    expect(lines[0]).toContain("(pirate)");
+    expect(lines[0]).toContain("14,99 €");
+    expect(lines[0]).toContain("Terror of the seven bathtubs.");
+    expect(lines[1]).toMatch(/^plain-jane — /);
+  });
+
+  it("renders the empty-state message for an empty catalog", () => {
+    const rendered = renderCatalog([]);
+    expect(rendered).toBe("The pond is empty — no ducks in the catalog yet.");
+  });
+});
+
+describe("renderDuckDetail", () => {
+  it("contains every field, each trait and power, and the stock label", () => {
+    const detail = renderDuckDetail(gifted);
+    expect(detail).toContain("Captain Quackbeard");
+    expect(detail).toContain("(pirate)");
+    expect(detail).toContain("14,99 €");
+    expect(detail).toContain("Terror of the seven bathtubs.");
+    expect(detail).toContain(gifted.description);
+    for (const trait of gifted.traits) {
+      expect(detail).toContain(trait);
+    }
+    for (const power of gifted.powers) {
+      expect(detail).toContain(power);
+    }
+    expect(detail).toContain("Only 2 left");
+  });
+
+  it("renders 'Powers: none' for a duck without powers", () => {
+    expect(renderDuckDetail(powerless)).toContain("Powers: none");
+  });
+
+  it("renders a friendly not-found message for undefined, never empty", () => {
+    const rendered = renderDuckDetail(undefined);
+    expect(rendered).toBe("This duck has waddled off — no duck with that id.");
+    expect(rendered).not.toBe("");
+  });
+});
