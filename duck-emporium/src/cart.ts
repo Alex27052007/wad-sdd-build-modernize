@@ -99,3 +99,22 @@ export function setQuantity(
 export function removeFromCart(cart: Cart, duckId: string): Cart {
   return cart.filter((line) => line.duckId !== duckId);
 }
+
+/** Σ quantity × price over current catalog prices; 0 for empty cart.
+ *  Cent-safe: sums Math.round(price * 100) per unit, divides once at the
+ *  end. A line whose duckId is missing from the catalog throws TypeError:
+ *  carts are built through addToCart, which validates ids, so a missing
+ *  duck here is a data-integrity/programmer error (or a catalog-edit race
+ *  that checkout revalidation owns) — not user input to map to a result
+ *  value. */
+export function cartTotal(cart: Cart, catalog?: Duck[]): number {
+  const ducks = catalog ?? listDucks();
+  const cents = cart.reduce((sum, line) => {
+    const duck = getDuckById(line.duckId, ducks);
+    if (duck === undefined) {
+      throw new TypeError(`cart line references unknown duck id "${line.duckId}"`);
+    }
+    return sum + Math.round(duck.price * 100) * line.quantity;
+  }, 0);
+  return cents / 100;
+}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   EMPTY_CART,
   addToCart,
+  cartTotal,
   removeFromCart,
   setQuantity,
   type Cart,
@@ -192,6 +193,44 @@ describe("setQuantity", () => {
       expect(cart).toEqual(snapshot);
     },
   );
+});
+
+describe("cartTotal", () => {
+  const dime = fixtureDuck({
+    id: "dime-duck",
+    name: "Dime Duck",
+    price: 0.1,
+    stock: 10,
+  });
+  const priced = Object.freeze([sirQuack, rare, dime]) as Duck[];
+
+  it("returns exactly 0 for the empty cart", () => {
+    expect(cartTotal(EMPTY_CART, priced)).toBe(0);
+  });
+
+  it("sums quantity × price across multiple lines", () => {
+    const cart = frozenCart(
+      { duckId: "sir-quacksalot", quantity: 2 }, // 2 × 4.99 = 9.98
+      { duckId: "rare-duck", quantity: 1 }, // 1 × 4.99 = 4.99
+    );
+    expect(cartTotal(cart, priced)).toBe(14.97);
+  });
+
+  it("is cent-safe: 3 × 0.10 € totals exactly 0.3", () => {
+    const cart = frozenCart({ duckId: "dime-duck", quantity: 3 });
+    expect(cartTotal(cart, priced)).toBe(0.3);
+  });
+
+  it("handles a single line with quantity > 1", () => {
+    const cart = frozenCart({ duckId: "sir-quacksalot", quantity: 4 });
+    expect(cartTotal(cart, priced)).toBe(19.96);
+  });
+
+  it("throws TypeError for a line whose duck is missing from the catalog", () => {
+    const cart = frozenCart({ duckId: "vanished-duck", quantity: 1 });
+    expect(() => cartTotal(cart, priced)).toThrow(TypeError);
+    expect(() => cartTotal(cart, priced)).toThrow(/vanished-duck/);
+  });
 });
 
 describe("removeFromCart", () => {
