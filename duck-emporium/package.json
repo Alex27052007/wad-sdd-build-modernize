@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "dev:api": "tsx src/server.ts",
     "test": "vitest run"
   },
   "keywords": [],

@@ -291,6 +291,11 @@ export function createApp(root, deps = {}) {
   }
 
   async function init() {
+    writeState({
+      cartOpen: false,
+      checkoutOpen: false,
+      activeView: "shop",
+    });
     await refreshCatalog();
     await loadDuckOfTheDay();
     await refreshCart();
@@ -314,6 +319,9 @@ export function createApp(root, deps = {}) {
     try {
       const payload = await api.fetchDuckDetail(duckId);
       writeState({
+        activeView: "detail",
+        cartOpen: false,
+        checkoutOpen: false,
         selectedDuckId: duckId,
         selectedDuck: normalizeDuck(payload),
         errors: {
@@ -323,6 +331,9 @@ export function createApp(root, deps = {}) {
       });
     } catch (error) {
       writeState({
+        activeView: "detail",
+        cartOpen: false,
+        checkoutOpen: false,
         selectedDuckId: duckId,
         selectedDuck: null,
         errors: {
@@ -407,7 +418,49 @@ export function createApp(root, deps = {}) {
   }
 
   function proceedToCheckout() {
-    writeState({ activePanel: "checkout" });
+    writeState({
+      activeView: "cart",
+      cartOpen: true,
+      checkoutOpen: true,
+    });
+    draw();
+  }
+
+  function toggleCart() {
+    const current = readState();
+    const nextOpen = !(current.activeView === "cart" && current.cartOpen);
+    writeState({
+      activeView: nextOpen ? "cart" : "shop",
+      cartOpen: nextOpen,
+      checkoutOpen: nextOpen ? current.checkoutOpen : false,
+    });
+    draw();
+  }
+
+  function closeCart() {
+    writeState({
+      activeView: "shop",
+      cartOpen: false,
+      checkoutOpen: false,
+    });
+    draw();
+  }
+
+  function showQuizView() {
+    writeState({
+      activeView: "quiz",
+      cartOpen: false,
+      checkoutOpen: false,
+    });
+    draw();
+  }
+
+  function showShopView() {
+    writeState({
+      activeView: "shop",
+      cartOpen: false,
+      checkoutOpen: false,
+    });
     draw();
   }
 
@@ -446,7 +499,9 @@ export function createApp(root, deps = {}) {
       const nextCart = payload?.cart !== undefined ? enrichCart(normalizeCart(payload.cart), current.ducks) : current.cart;
 
       writeState({
-        activePanel: "checkout",
+        activeView: "cart",
+        cartOpen: true,
+        checkoutOpen: true,
         cart: nextCart,
         checkout: {
           ...checkout,
@@ -462,7 +517,9 @@ export function createApp(root, deps = {}) {
       return { ok: true };
     } catch (error) {
       writeState({
-        activePanel: "checkout",
+        activeView: "cart",
+        cartOpen: true,
+        checkoutOpen: true,
         checkout: {
           ...checkout,
           errors: {
@@ -532,6 +589,7 @@ export function createApp(root, deps = {}) {
 
   return {
     addToCart,
+    closeCart,
     init,
     proceedToCheckout,
     removeFromCart,
@@ -541,6 +599,9 @@ export function createApp(root, deps = {}) {
     setQuizAnswers,
     submitCheckoutForm,
     submitQuiz,
+    showQuizView,
+    showShopView,
+    toggleCart,
     updateCartQuantity,
     getSnapshot: readState,
   };
@@ -566,6 +627,22 @@ export function bindAppDomEvents(root, app) {
 
     if (action === "apply-filters") {
       await app.setFilters(readFilterFieldsFromRoot(root));
+      return;
+    }
+    if (action === "toggle-cart") {
+      app.toggleCart();
+      return;
+    }
+    if (action === "close-cart") {
+      app.closeCart();
+      return;
+    }
+    if (action === "show-quiz") {
+      app.showQuizView();
+      return;
+    }
+    if (action === "show-shop") {
+      app.showShopView();
       return;
     }
     if (action === "select-duck" && duckId) {

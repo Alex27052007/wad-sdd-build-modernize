@@ -10,40 +10,57 @@
   <body>
     <a class="skip-link" href="#app-main">Skip to main content</a>
     <header class="site-header" role="banner">
-      <p class="eyebrow">The Rubber Duck Emporium</p>
-      <h1>Find Your Next Favorite Duck</h1>
-      <p>Catalog, cart, checkout, and quiz in one browser experience.</p>
+      <div class="header-copy">
+        <p class="eyebrow">The Rubber Duck Emporium</p>
+        <h1>Find Your Next Favorite Duck</h1>
+        <p>Browse ducks first. Open cart and checkout only when you are ready.</p>
+      </div>
+      <nav class="header-controls" aria-label="Primary">
+        <button id="show-shop" type="button" data-action="show-shop" class="secondary view-toggle" aria-pressed="true">Shop</button>
+        <button id="show-quiz" type="button" data-action="show-quiz" class="secondary view-toggle" aria-pressed="false">Quiz</button>
+        <button id="cart-toggle" type="button" data-action="toggle-cart" aria-expanded="false">
+          Cart (<span id="cart-count">0</span>)
+        </button>
+      </nav>
     </header>
 
     <main id="app-main" class="layout" role="main">
-      <section id="catalog" aria-label="Catalog" class="panel">
-        <h2>Catalog</h2>
-        <p>Browse all ducks and refine your search.</p>
+      <section id="shop-page" aria-label="Shop page">
+        <section id="duck-of-the-day" aria-label="Duck of the day" class="panel feature compact-card">
+          <h2>Duck of the Day</h2>
+          <p>Today&#39;s highlighted duck appears here.</p>
+        </section>
+
+        <section id="catalog" aria-label="Catalog" class="panel">
+          <h2>Catalog</h2>
+          <p>Browse all ducks and refine your search.</p>
+        </section>
       </section>
 
-      <section id="duck-of-the-day" aria-label="Duck of the day" class="panel feature">
-        <h2>Duck of the Day</h2>
-        <p>Today&#39;s highlighted duck appears here.</p>
+      <section id="detail-page" aria-label="Duck detail page" hidden>
+        <section id="duck-detail" aria-label="Duck detail" class="panel">
+          <h2>Duck Detail</h2>
+          <p>Choose a duck to view details.</p>
+        </section>
       </section>
 
-      <section id="duck-detail" aria-label="Duck detail" class="panel">
-        <h2>Duck Detail</h2>
-        <p>Choose a duck to view details.</p>
+      <section id="quiz-page" aria-label="Personality quiz page" hidden>
+        <section id="quiz" aria-label="Personality quiz" class="panel">
+          <h2>Personality Quiz</h2>
+          <p>Answer questions to find your best duck match.</p>
+        </section>
       </section>
 
-      <section id="cart" aria-label="Shopping cart" class="panel">
-        <h2>Cart</h2>
-        <p>Your selected ducks appear here.</p>
-      </section>
+      <section id="cart-page" aria-label="Shopping cart page" hidden>
+        <section id="cart" aria-label="Shopping cart" class="panel">
+          <h2>Cart</h2>
+          <p>Your selected ducks appear here.</p>
+        </section>
 
-      <section id="checkout" aria-label="Checkout" class="panel">
-        <h2>Checkout</h2>
-        <p>Provide shipping and payment details.</p>
-      </section>
-
-      <section id="quiz" aria-label="Personality quiz" class="panel">
-        <h2>Personality Quiz</h2>
-        <p>Answer questions to find your best duck match.</p>
+        <section id="checkout" aria-label="Checkout" class="panel" hidden>
+          <h2>Checkout</h2>
+          <p>Provide shipping and payment details.</p>
+        </section>
       </section>
     </main>
   </body>

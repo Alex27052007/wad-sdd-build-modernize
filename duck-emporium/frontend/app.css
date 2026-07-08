@@ -1,14 +1,26 @@
 :root {
-  --paper: #f7f5ee;
-  --ink: #1f2a2f;
-  --muted: #607076;
-  --panel: #fffef9;
-  --line: #d6d4c9;
-  --accent: #0f7d65;
+  --paper: #fee2ad;
+  --ink: #4f2e2e;
+  --muted: #7b5252;
+  --panel: #f8fab4;
+  --line: #ffc7a7;
+  --accent: #f08787;
+  --accent-dark: #d86f6f;
+  --accent-light: #ffc7a7;
+  --danger: #b85b5b;
+  --warning-bg: #fee2ad;
+  --warning-border: #f08787;
+  --radius: 12px;
+  --radius-sm: 7px;
+  --shadow: 0 2px 12px rgba(79, 46, 46, 0.12);
 }
 
 * {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 html,
@@ -18,20 +30,53 @@ body {
   min-height: 100%;
 }
 
-body {
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
-  color: var(--ink);
-  background:
-    radial-gradient(circle at 80% 10%, #fef7d7 0%, transparent 28%),
-    radial-gradient(circle at 0% 100%, #d8f5e5 0%, transparent 25%),
-    var(--paper);
-  line-height: 1.45;
+.header-copy {
+  min-width: min(100%, 320px);
 }
 
+.header-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body {
+  font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 80% 10%, #f8fab4 0%, transparent 28%),
+    radial-gradient(circle at 0% 100%, #ffc7a7 0%, transparent 25%),
+    var(--paper);
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+button.secondary:hover {
+  background: var(--accent-light);
+}
+
+button.view-toggle[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── Accessibility ─────────────────────────────────── */
 .skip-link {
   position: absolute;
   left: -10000px;
   top: auto;
+}
+
+.compact-card {
+  padding: 0.85rem 1rem;
 }
 
 .skip-link:focus {
@@ -41,65 +86,528 @@ body {
   padding: 0.5rem 0.75rem;
   background: var(--ink);
   color: #fff;
+  border-radius: var(--radius-sm);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── Header ────────────────────────────────────────── */
 .site-header {
-  padding: 1.25rem 1rem 0.5rem;
+  padding: 1.25rem 1.5rem 0.75rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1rem;
+  align-items: flex-end;
+  justify-content: space-between;
 }
 
 .site-header h1 {
-  margin: 0.25rem 0 0.5rem;
-  font-size: clamp(1.5rem, 5vw, 2.4rem);
-  line-height: 1.15;
+  margin: 0.25rem 0 0.4rem;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.site-header > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .eyebrow {
   margin: 0;
   color: var(--accent);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
+/* ── Layout grid ───────────────────────────────────── */
 .layout {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 0.85rem;
-  padding: 0.75rem 1rem 1.2rem;
+  padding: 0.75rem 1.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
+#shop-page,
+#detail-page,
+#quiz-page,
+#cart-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
+#shop-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
+@media (min-width: 860px) {
+  #shop-page {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  #catalog {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── Panels ────────────────────────────────────────── */
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 0.9rem;
-  box-shadow: 0 4px 14px rgba(31, 42, 47, 0.05);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.panel.is-open {
+  animation: panel-enter 180ms ease-out;
+}
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .panel h2 {
-  margin: 0 0 0.35rem;
-  font-size: 1.1rem;
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-.panel p {
+.panel > p {
   margin: 0;
   color: var(--muted);
 }
 
 .feature {
-  border-color: #f3d57a;
-  background: linear-gradient(135deg, #fff8dc, var(--panel));
+  border-color: var(--warning-border);
+  background: linear-gradient(135deg, var(--warning-bg) 0%, #f8fab4 60%);
 }
 
-@media (min-width: 720px) {
-  .layout {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
+/* ── Buttons ───────────────────────────────────────── */
+button {
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: background 0.15s, box-shadow 0.15s;
+}
 
-  #catalog,
-  #duck-of-the-day {
-    grid-column: 1 / -1;
+button[type="button"]:not([disabled]) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+button[type="button"]:not([disabled]):hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+button[disabled] {
+  background: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* ── Form inputs ───────────────────────────────────── */
+input[type="text"],
+input:not([type]),
+input[type="email"],
+input[type="number"] {
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Catalog filters ───────────────────────────────── */
+.catalog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.catalog-filters label {
+  min-width: 120px;
+  flex: 1 1 120px;
+}
+
+.catalog-filters input {
+  width: 100%;
+}
+
+.catalog-filters button {
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+/* ── Duck grid + cards ─────────────────────────────── */
+.duck-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.85rem;
+}
+
+.duck-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: box-shadow 0.15s;
+}
+
+.duck-card:hover {
+  box-shadow: 0 4px 16px rgba(31, 42, 47, 0.1);
+}
+
+.duck-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.duck-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  flex: 1;
+}
+
+.duck-card button {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.duck-card button + button {
+  margin-top: 0.3rem;
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.duck-card button + button:hover {
+  background: var(--accent-light);
+}
+
+.card-actions {
+  margin-top: 0.45rem;
+  display: flex;
+  gap: 0.45rem;
+}
+
+.duck-card .icon-button {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.duck-card .icon-button .icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  stroke-width: 2.2;
+}
+
+.icon-button {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.icon-button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.icon-button .icon {
+  width: 1.08rem;
+  height: 1.08rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-button:hover {
+  background: var(--accent-light);
+}
+
+.icon-button.primary:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* ── Duck of the Day ───────────────────────────────── */
+.duck-day-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.duck-day-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.duck-day-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ── Duck Detail ───────────────────────────────────── */
+.duck-detail-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.duck-detail-card p {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.duck-detail-card h4 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.duck-detail-card ul {
+  margin: 0 0 0.75rem;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
+}
+
+/* ── Cart ──────────────────────────────────────────── */
+.cart-lines {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cart-lines li {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 860px) {
+  .cart-lines li {
+    grid-template-columns: 1fr auto auto auto auto;
   }
+}
+
+.cart-lines li:last-child {
+  border-bottom: none;
+}
+
+.cart-lines input {
+  width: 4rem;
+}
+
+.cart-lines button {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.cart-total {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  text-align: right;
+}
+
+/* ── Checkout form ─────────────────────────────────── */
+.checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkout-form button[data-action="submit-checkout"] {
+  margin-top: 0.25rem;
+  align-self: flex-start;
+}
+
+.checkout-field-error {
+  margin: -0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.checkout-form-error {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  background: #ffc7a7;
+  border: 1px solid #f08787;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--danger);
+}
+
+.checkout-confirmation {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #fee2ad;
+  border: 1px solid #f08787;
+  border-radius: var(--radius-sm);
+}
+
+.checkout-confirmation h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--accent-dark);
+}
+
+.checkout-confirmation p,
+.checkout-confirmation ul {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+/* ── Quiz ──────────────────────────────────────────── */
+.quiz-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.quiz-form fieldset {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  margin: 0;
+}
+
+.quiz-form legend {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 0.25rem;
+}
+
+.quiz-form label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+  margin: 0.3rem 0;
+}
+
+.quiz-form input[type="radio"] {
+  width: auto;
+  accent-color: var(--accent);
+}
+
+.quiz-result {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  background: #fee2ad;
+  border: 1px solid #f08787;
+  border-radius: var(--radius-sm);
+}
+
+.quiz-result h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-dark);
+}
+
+.quiz-result p {
+  margin: 0.2rem 0;
+  font-size: 0.9rem;
+}
+
+/* ── Errors ────────────────────────────────────────── */
+.feature-error {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  background: #ffc7a7;
+  border: 1px solid #f08787;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--danger);
 }

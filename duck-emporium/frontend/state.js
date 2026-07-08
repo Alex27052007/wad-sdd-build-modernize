@@ -4,7 +4,11 @@ export function createInitialState() {
     filteredDucks: [],
     duckOfTheDay: null,
     selectedDuckId: null,
+    selectedDuck: null,
     cart: [],
+    cartOpen: false,
+    checkoutOpen: false,
+    activeView: "shop",
     filters: {
       query: "",
       category: "",
@@ -22,7 +26,6 @@ export function createInitialState() {
       answers: {},
       result: null,
     },
-    loading: {},
     errors: {},
   };
 }

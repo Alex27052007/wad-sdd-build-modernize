@@ -1,158 +1,143 @@
 # Tasks: Web frontend for the Duck Emporium (`web-frontend`)
 
-**Source plan:** `specs/web-frontend/plan.md`
+**Source plan:** `specs/web-frontend/plan.md`  
 **Status:** Draft — awaiting approval
 
-Task sequencing note: the plan assumes the JSON API contracts from stories 1–8
-already exist and are stable. Task 1 validates/wires that boundary first; all
-subsequent frontend tasks depend on it.
+## Task 1 — Server entrypoint and static delivery
 
-## Task 1 — HTTP entrypoint and static asset serving
+**Files:** `src/server.ts`, `src/server.test.ts`  
+**Depends on:** existing API stories
 
-**Files:** `src/server.ts`, `src/server.test.ts`
-**Depends on:** existing API contracts from stories 1–8
-
-Create the server bootstrap and routing shell that:
-- serves the SPA entry HTML for both `/` and `/app`
-- serves static assets from `public/`
-- keeps API route behavior/status semantics unchanged for existing JSON
-  contracts (no new frontend-only endpoints)
+- Serve SPA entry at `/` and `/app`.
+- Serve static assets from `public/`.
+- Keep existing API contracts/statuses unchanged.
 
 Tests:
-- `/` and `/app` return HTML
-- static assets resolve with expected content types
-- unknown static path returns 404
-- API routes still return existing status codes (including 400/404/409 paths)
+- `/` and `/app` return HTML shell.
+- static assets resolve.
+- API routes preserve 400/404/409 behavior.
 
-**Acceptance check:** `npm test -- src/server.test.ts` passes.
+Acceptance check: `npm test -- src/server.test.ts`
 
-## Task 2 — Frontend shell, layout, and responsive baseline
+## Task 2 — UX-first shell and responsive layout skeleton
 
-**Files:** `public/index.html`, `public/app.css`
+**Files:** `public/index.html`, `public/app.css`, `public/__tests__/app.dom.test.ts`  
 **Depends on:** Task 1
 
-Add a no-build SPA shell and mobile-first styles with:
-- semantic landmarks/labels for accessibility baseline
-- defined sections for catalog, duck detail, duck-of-the-day, cart, checkout,
-  and quiz
-- responsive rules that avoid horizontal scrolling at mobile widths
+- Build shell with:
+  - header/top bar containing cart button + count placeholder,
+  - catalog as primary region,
+  - dedicated detail page/view region,
+  - dedicated cart page/view region,
+  - compact duck-of-the-day card region,
+  - quiz entry control (tab/link/button) without default expanded quiz content.
+- Ensure detail/cart/quiz pages are hidden on initial load and checkout form is hidden until cart checkout flow.
 
 Tests:
-- server test confirms new static assets are served
-- DOM smoke test confirms root regions render and are selectable
+- initial DOM shows catalog region.
+- initial DOM hides full cart and checkout regions.
+- initial DOM includes cart button with count-only affordance.
 
-**Acceptance check:** `npm test -- src/server.test.ts` and `npm test -- public/__tests__/app.dom.test.ts` pass for shell smoke coverage.
+Acceptance check: `npm test -- public/__tests__/app.dom.test.ts`
 
-## Task 3 — Browser API client and in-memory state store
+## Task 3 — API client and page-state transitions
 
-**Files:** `public/api.js`, `public/state.js`, `public/__tests__/app.dom.test.ts`
-**Depends on:** Tasks 1–2
+**Files:** `public/api.js`, `public/state.js`, `public/__tests__/app.dom.test.ts`  
+**Depends on:** Task 2
 
-Implement fetch wrappers and central UI state helpers per plan:
-- API functions for catalog/detail/duck-of-the-day/cart/checkout/quiz
-- error normalization into feature-scoped messages
-- in-memory-only state updates (no URL query synchronization)
+- Implement API wrappers for catalog/detail/day/cart/checkout/quiz.
+- Add state transitions:
+  - `activeView` switching between shop/detail/cart/quiz,
+  - cart button navigation to cart page,
+  - `checkoutOpen` gated by cart page.
 
 Tests:
-- mocked fetch verifies each API wrapper calls expected endpoint/method/payload
-- error responses normalize into user-facing error objects
-- state store create/get/set behavior is deterministic and immutable by caller
+- `activeView` defaults to shop.
+- selecting a duck opens detail page/view.
+- leaving cart page forces checkout closed.
+- quiz view requires explicit switch.
 
-**Acceptance check:** `npm test -- public/__tests__/app.dom.test.ts` passes for API/state unit coverage.
+Acceptance check: `npm test -- public/__tests__/app.dom.test.ts`
 
-## Task 4 — Catalog, filters, duck detail, and duck-of-the-day UI flow
+## Task 4 — Catalog, filters, detail, and compact duck-of-day card
 
-**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`
+**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`  
 **Depends on:** Task 3
 
-Implement catalog-driven UI flow:
-- render catalog cards with name/category/price/tagline
-- wire free-text/category/price filter controls to refresh list
-- show duck detail panel (description, traits, stock, add-to-cart action)
-- render duck-of-the-day prominently in catalog area
+- Render catalog cards with required fields.
+- Wire search/filter controls.
+- Render selectable duck detail.
+- Render duck-of-day in compact card form (teaser footprint, not dominant block).
 
 Tests:
-- catalog renders required fields
-- filter interactions update visible ducks
-- selecting duck opens detail view with required fields
-- duck-of-the-day block renders when API returns data
+- filter interactions update displayed ducks.
+- detail opens and includes required fields/add-to-cart action.
+- duck-of-day appears in compact feature region.
 
-**Acceptance check:** `npm test -- public/__tests__/app.dom.test.ts` passes for catalog/detail/day flow scenarios.
+Acceptance check: `npm test -- public/__tests__/app.dom.test.ts`
 
-## Task 5 — Cart rendering and cart mutations
+## Task 5 — Cart page behavior and count badge
 
-**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`
+**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`  
 **Depends on:** Task 4
 
-Implement cart behavior:
-- render line items with quantity and line totals
-- show running total
-- support quantity updates and item removal
-- provide proceed-to-checkout action and state transition
+- Keep cart page hidden by default.
+- Clicking cart button opens cart page.
+- Header cart state shows item count summary.
+- Cart page supports quantity edits/removal and shows totals.
 
 Tests:
-- add-to-cart updates cart view
-- quantity update recomputes line totals/running total
-- removal updates totals and empty-state behavior
-- cart API errors render feature-local friendly messages
+- default state: cart page hidden, count summary visible.
+- cart page state: cart lines/totals visible.
+- back action returns to shop page.
 
-**Acceptance check:** `npm test -- public/__tests__/app.dom.test.ts` passes for cart scenarios.
+Acceptance check: `npm test -- public/__tests__/app.dom.test.ts`
 
-## Task 6 — Checkout form, inline validation errors, and confirmation view
+## Task 6 — Checkout gated inside cart page flow
 
-**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`
+**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`  
 **Depends on:** Task 5
 
-Implement checkout interaction:
-- collect name/email/address/card fields
-- submit to existing checkout API contract
-- show inline field/form errors for validation/API failures
-- show success confirmation with order ID, items, and total
+- Show proceed-to-checkout action only on cart page.
+- Render checkout form only when checkout sub-flow is active on cart page.
+- Submit checkout and show inline errors/success confirmation.
 
 Tests:
-- required field and invalid input errors render inline
-- API 400/409 checkout failures show recoverable user messages
-- successful checkout renders confirmation contract fields
+- checkout form hidden on initial load.
+- checkout form not visible when cart page is not active.
+- checkout form visible only after entering cart page and starting checkout flow.
+- success confirmation and API error paths covered.
 
-**Acceptance check:** `npm test -- public/__tests__/app.dom.test.ts` passes for checkout scenarios.
+Acceptance check: `npm test -- public/__tests__/app.dom.test.ts`
 
-## Task 7 — Personality quiz flow and feature-scoped error UX
+## Task 7 — Quiz in separate view/section
 
-**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`
+**Files:** `public/render.js`, `public/app.js`, `public/__tests__/app.dom.test.ts`  
 **Depends on:** Task 6
 
-Implement quiz flow and finalize shared error messaging:
-- render quiz questions/options and collect answers
-- submit answers to existing quiz API behavior
-- show recommended duck + recommendation message
-- ensure 400/404/409 errors across catalog/detail/cart/checkout/quiz are
-  human-friendly and scoped to the active feature region
+- Implement quiz UI behind explicit view switch or section entry.
+- Ensure quiz is not always expanded in default shop view.
+- Submit answers and render recommendation + message.
 
 Tests:
-- quiz submission returns and renders recommendation result
-- quiz failure shows local error message without collapsing whole app
-- cross-feature error handling assertions for 400/404/409
+- default shop view does not show expanded quiz content.
+- quiz appears after explicit user action.
+- quiz submit renders recommendation result.
 
-**Acceptance check:** `npm test -- public/__tests__/app.dom.test.ts` passes for quiz and error UX scenarios.
+Acceptance check: `npm test -- public/__tests__/app.dom.test.ts`
 
-## Task 8 — Final integration and regression sweep
+## Task 8 — Full regression and acceptance sweep
 
-**Files:** `package.json` (dev dependency only if missing), tests only for fixes
+**Files:** tests and minimal fixes only  
 **Depends on:** Tasks 1–7
 
-Complete story-wide verification:
-- ensure `jsdom` test dependency is present for DOM/integration tests
-- run full test suite and close any regressions
-- verify no frontend build step is required to serve and use the app
+- Run full suite.
+- Confirm UX acceptance criteria:
+  - catalog-first default,
+  - dedicated detail page/view,
+  - dedicated cart page/view + count badge,
+  - checkout only in cart flow,
+  - compact duck-of-day card,
+  - separate quiz flow.
 
-Tests:
-- full repo test run is green
-- targeted checks confirm `/` and `/app` both load SPA shell
-- acceptance criteria traceability from spec to passing tests is documented in
-  commit notes
-
-**Acceptance check:** `npm test` passes.
-
-## Suggested commit order
-
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Acceptance check: `npm test`

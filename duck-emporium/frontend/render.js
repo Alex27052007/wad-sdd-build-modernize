@@ -23,6 +23,37 @@ function readLineTotal(item) {
   return quantity * unitPrice;
 }
 
+function renderIconSvg(iconName) {
+  if (iconName === "arrow-left") {
+    return `<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false">
+  <path d="M20 12H6"></path>
+  <path d="m12 18-6-6 6-6"></path>
+</svg>`;
+  }
+
+  if (iconName === "search") {
+    return `<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false">
+  <circle cx="11" cy="11" r="7"></circle>
+  <path d="m20 20-3.5-3.5"></path>
+</svg>`;
+  }
+
+  return `<svg viewBox="0 0 24 24" class="icon" aria-hidden="true" focusable="false">
+  <circle cx="9" cy="20" r="1.5"></circle>
+  <circle cx="17" cy="20" r="1.5"></circle>
+  <path d="M3 4h2l2.2 10.3a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7.2"></path>
+</svg>`;
+}
+
+function renderIconButton({ action, duckId, iconName, label, extraClass = "" }) {
+  const className = `icon-button ${extraClass}`.trim();
+  const duckIdAttr = duckId ? ` data-duck-id="${escapeHtml(duckId)}"` : "";
+  return `<button type="button" class="${className}" data-action="${escapeHtml(action)}"${duckIdAttr} aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">
+  ${renderIconSvg(iconName)}
+  <span class="visually-hidden">${escapeHtml(label)}</span>
+</button>`;
+}
+
 export function renderFeatureError(_targetEl, message) {
   return `<p class="feature-error" role="alert">${escapeHtml(message)}</p>`;
 }
@@ -60,8 +91,10 @@ export function renderCatalog(ducks, filters = {}) {
   <p><strong>Category:</strong> ${escapeHtml(duck.category)}</p>
   <p><strong>Price:</strong> ${escapeHtml(formatPrice(duck.price))}</p>
   <p>${escapeHtml(duck.tagline)}</p>
-  <button type="button" data-action="select-duck" data-duck-id="${escapeHtml(duck.id)}">View Details</button>
-  <button type="button" data-action="add-to-cart" data-duck-id="${escapeHtml(duck.id)}">Add to Cart</button>
+  <div class="card-actions">
+    ${renderIconButton({ action: "select-duck", duckId: duck.id, iconName: "search", label: "View Details" })}
+    ${renderIconButton({ action: "add-to-cart", duckId: duck.id, iconName: "cart", label: "Add to Cart", extraClass: "primary" })}
+  </div>
 </article>`;
     })
     .join("\n");
@@ -71,7 +104,8 @@ export function renderCatalog(ducks, filters = {}) {
 
 export function renderDuckDetail(duck) {
   if (!duck) {
-    return "<p>Select a duck to see full details.</p>";
+    return `<p>Select a duck to see full details.</p>
+${renderIconButton({ action: "show-shop", iconName: "arrow-left", label: "Back to Shop", extraClass: "nav-back" })}`;
   }
 
   const traits = Array.isArray(duck.traits) && duck.traits.length > 0
@@ -86,7 +120,8 @@ export function renderDuckDetail(duck) {
   <p><strong>Stock:</strong> ${escapeHtml(stockStatus)}</p>
   <h4>Personality traits</h4>
   <ul>${traits}</ul>
-  <button type="button" data-action="add-to-cart" data-duck-id="${escapeHtml(duck.id)}">Add to Cart</button>
+  ${renderIconButton({ action: "show-shop", iconName: "arrow-left", label: "Back to Shop", extraClass: "nav-back" })}
+  ${renderIconButton({ action: "add-to-cart", duckId: duck.id, iconName: "cart", label: "Add to Cart", extraClass: "primary" })}
 </article>`;
 }
 
@@ -99,12 +134,14 @@ export function renderDuckOfTheDay(duck) {
   <h3>${escapeHtml(duck.name)}</h3>
   <p>${escapeHtml(duck.tagline)}</p>
   <p><strong>Category:</strong> ${escapeHtml(duck.category)}</p>
+  ${renderIconButton({ action: "select-duck", duckId: duck.id, iconName: "search", label: "View Details" })}
 </article>`;
 }
 
-export function renderCart(cart, activePanel = "catalog") {
+export function renderCart(cart, checkoutOpen = false) {
   if (!Array.isArray(cart) || cart.length === 0) {
     return `<p>Your cart is empty.</p>
+${renderIconButton({ action: "show-shop", iconName: "arrow-left", label: "Back to Shop", extraClass: "nav-back" })}
 <button type="button" data-action="proceed-to-checkout" disabled>Proceed to Checkout</button>`;
   }
 
@@ -128,12 +165,13 @@ export function renderCart(cart, activePanel = "catalog") {
     .join("");
 
   const total = cart.reduce((sum, item) => sum + readLineTotal(item), 0);
-  const checkoutState = activePanel === "checkout"
+  const checkoutState = checkoutOpen
     ? `<p class="checkout-state">Proceeding to checkout.</p>`
     : "";
 
   return `<ul class="cart-lines">${rows}</ul>
 <p class="cart-total"><strong>Total:</strong> ${escapeHtml(formatPrice(total))}</p>
+${renderIconButton({ action: "show-shop", iconName: "arrow-left", label: "Back to Shop", extraClass: "nav-back" })}
 <button type="button" data-action="proceed-to-checkout">Proceed to Checkout</button>
 ${checkoutState}`;
 }
@@ -229,12 +267,53 @@ export function renderQuiz(quiz = {}) {
 }
 
 export function renderApp(root, state) {
+  const cartButtonCount = root.querySelector("#cart-count");
+  const cartToggleButton = root.querySelector("#cart-toggle");
+  const showShopButton = root.querySelector("#show-shop");
+  const showQuizButton = root.querySelector("#show-quiz");
+  const shopPage = root.querySelector("#shop-page");
+  const detailPage = root.querySelector("#detail-page");
+  const quizPage = root.querySelector("#quiz-page");
+  const cartPage = root.querySelector("#cart-page");
   const catalog = root.querySelector("#catalog");
   const detail = root.querySelector("#duck-detail");
   const day = root.querySelector("#duck-of-the-day");
   const cart = root.querySelector("#cart");
   const checkout = root.querySelector("#checkout");
   const quiz = root.querySelector("#quiz");
+  const cartCount = (state.cart ?? []).reduce((sum, line) => sum + Number(line.quantity ?? 0), 0);
+
+  if (cartButtonCount) {
+    cartButtonCount.textContent = String(cartCount);
+  }
+
+  if (cartToggleButton && typeof cartToggleButton.setAttribute === "function") {
+    cartToggleButton.setAttribute("aria-expanded", state.activeView === "cart" ? "true" : "false");
+  }
+
+  if (showShopButton && typeof showShopButton.setAttribute === "function") {
+    showShopButton.setAttribute("aria-pressed", state.activeView === "shop" ? "true" : "false");
+  }
+
+  if (showQuizButton && typeof showQuizButton.setAttribute === "function") {
+    showQuizButton.setAttribute("aria-pressed", state.activeView === "quiz" ? "true" : "false");
+  }
+
+  if (shopPage) {
+    shopPage.hidden = state.activeView !== "shop";
+  }
+
+  if (detailPage) {
+    detailPage.hidden = state.activeView !== "detail";
+  }
+
+  if (quizPage) {
+    quizPage.hidden = state.activeView !== "quiz";
+  }
+
+  if (cartPage) {
+    cartPage.hidden = state.activeView !== "cart";
+  }
 
   if (catalog) {
     const error = state.errors?.catalog;
@@ -257,12 +336,20 @@ export function renderApp(root, state) {
   }
 
   if (cart) {
+    cart.hidden = false;
+    if (cart.classList && typeof cart.classList.toggle === "function") {
+      cart.classList.toggle("is-open", state.activeView === "cart");
+    }
     const error = state.errors?.cart;
-    const body = error ? renderFeatureError(cart, error) : renderCart(state.cart, state.activePanel);
+    const body = error ? renderFeatureError(cart, error) : renderCart(state.cart, state.checkoutOpen);
     cart.innerHTML = `<h2>Cart</h2>${body}`;
   }
 
   if (checkout) {
+    checkout.hidden = !(state.activeView === "cart" && state.checkoutOpen);
+    if (checkout.classList && typeof checkout.classList.toggle === "function") {
+      checkout.classList.toggle("is-open", state.activeView === "cart" && state.checkoutOpen);
+    }
     const error = state.errors?.checkout;
     const body = error
       ? renderFeatureError(checkout, error)

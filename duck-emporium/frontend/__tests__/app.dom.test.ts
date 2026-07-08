@@ -42,7 +42,7 @@ afterEach(async () => {
 });
 
 describe("frontend shell smoke", () => {
-  it("renders all root feature regions in the SPA shell", async () => {
+  it("renders cart/checkout collapsed by default with explicit cart and quiz controls", async () => {
     const { server, port } = await startServer({ port: 0 });
     activeServers.push(server);
 
@@ -53,9 +53,12 @@ describe("frontend shell smoke", () => {
     expect(html).toContain("id=\"catalog\"");
     expect(html).toContain("id=\"duck-detail\"");
     expect(html).toContain("id=\"duck-of-the-day\"");
-    expect(html).toContain("id=\"cart\"");
-    expect(html).toContain("id=\"checkout\"");
-    expect(html).toContain("id=\"quiz\"");
+    expect(html).toContain("id=\"cart-toggle\"");
+    expect(html).toContain("id=\"show-quiz\"");
+    expect(html).toContain("id=\"detail-page\" aria-label=\"Duck detail page\" hidden");
+    expect(html).toContain("id=\"cart-page\" aria-label=\"Shopping cart page\" hidden");
+    expect(html).toContain("id=\"checkout\" aria-label=\"Checkout\" class=\"panel\" hidden");
+    expect(html).toContain("id=\"quiz-page\" aria-label=\"Personality quiz page\" hidden");
     expect(html).toContain("role=\"main\"");
   });
 });
@@ -194,17 +197,75 @@ describe("catalog and detail rendering flow", () => {
   ];
 
   function createRootStub() {
+    function createNode({ hidden = false } = {}) {
+      const attributes = {};
+      return {
+        hidden,
+        innerHTML: "",
+        textContent: "",
+        setAttribute(name: string, value: string) {
+          attributes[name] = value;
+        },
+        getAttribute(name: string) {
+          return attributes[name] ?? null;
+        },
+        classList: {
+          values: new Set<string>(),
+          toggle(className: string, force?: boolean) {
+            if (force === undefined) {
+              if (this.values.has(className)) {
+                this.values.delete(className);
+              } else {
+                this.values.add(className);
+              }
+              return;
+            }
+
+            if (force) {
+              this.values.add(className);
+            } else {
+              this.values.delete(className);
+            }
+          },
+        },
+      };
+    }
+
     const nodes = {
-      "#catalog": { innerHTML: "" },
-      "#duck-detail": { innerHTML: "" },
-      "#duck-of-the-day": { innerHTML: "" },
-      "#cart": { innerHTML: "" },
-      "#checkout": { innerHTML: "" },
-      "#quiz": { innerHTML: "" },
+      "#shop-page": createNode(),
+      "#detail-page": createNode({ hidden: true }),
+      "#quiz-page": createNode({ hidden: true }),
+      "#cart-page": createNode({ hidden: true }),
+      "#cart-count": createNode(),
+      "#cart-toggle": createNode(),
+      "#show-shop": createNode(),
+      "#show-quiz": createNode(),
+      "#catalog": createNode(),
+      "#duck-detail": createNode(),
+      "#duck-of-the-day": createNode(),
+      "#cart": createNode(),
+      "#checkout": createNode({ hidden: true }),
+      "#quiz": createNode(),
     } as const;
 
     return {
-      querySelector(selector: "#catalog" | "#duck-detail" | "#duck-of-the-day" | "#cart" | "#checkout" | "#quiz") {
+      querySelector(
+        selector:
+          | "#shop-page"
+          | "#detail-page"
+          | "#quiz-page"
+          | "#cart-page"
+          | "#cart-count"
+          | "#cart-toggle"
+          | "#show-shop"
+          | "#show-quiz"
+          | "#catalog"
+          | "#duck-detail"
+          | "#duck-of-the-day"
+          | "#cart"
+          | "#checkout"
+          | "#quiz",
+      ) {
         return nodes[selector] ?? null;
       },
       nodes,
@@ -242,7 +303,7 @@ describe("catalog and detail rendering flow", () => {
     expect(categoryFiltered.map((duck) => duck.id)).toEqual(["philosopher"]);
   });
 
-  it("selecting a duck renders full detail with traits, stock, and add-to-cart action", async () => {
+  it("selecting a duck opens detail page with full detail content", async () => {
     const root = createRootStub();
     const app = createApp(root as unknown as Element, {
       api: {
@@ -256,6 +317,8 @@ describe("catalog and detail rendering flow", () => {
     await app.selectDuck("philosopher");
 
     const detailHtml = root.nodes["#duck-detail"].innerHTML;
+    expect(root.nodes["#detail-page"].hidden).toBe(false);
+    expect(root.nodes["#shop-page"].hidden).toBe(true);
     expect(detailHtml).toContain("A reflective duck with deep thoughts.");
     expect(detailHtml).toContain("Personality traits");
     expect(detailHtml).toContain("In stock (3)");
@@ -389,7 +452,7 @@ describe("catalog and detail rendering flow", () => {
     expect(cartHtml).toContain("stock conflict in cart");
   });
 
-  it("proceed-to-checkout triggers cart state transition", async () => {
+  it("proceed-to-checkout triggers gated cart/checkout state transition", async () => {
     const root = createRootStub();
     const app = createApp(root as unknown as Element, {
       api: {
@@ -412,8 +475,89 @@ describe("catalog and detail rendering flow", () => {
     await app.init();
     app.proceedToCheckout();
 
-    expect(app.getSnapshot().activePanel).toBe("checkout");
+    expect(app.getSnapshot().cartOpen).toBe(true);
+    expect(app.getSnapshot().checkoutOpen).toBe(true);
     expect(root.nodes["#cart"].innerHTML).toContain("Proceeding to checkout.");
+    expect(root.nodes["#cart"].hidden).toBe(false);
+    expect(root.nodes["#checkout"].hidden).toBe(false);
+  });
+
+  it("keeps cart and checkout hidden on initial load and shows count-only cart summary", async () => {
+    const root = createRootStub();
+    const app = createApp(root as unknown as Element, {
+      api: {
+        fetchCatalog: async () => ducks,
+        fetchDuckOfTheDay: async () => ducks[1],
+        fetchDuckDetail: async () => ducks[0],
+        fetchCart: async () => [
+          {
+            duckId: "philosopher",
+            quantity: 2,
+            name: "Philosopher Duck",
+            price: 12.5,
+          },
+        ],
+      },
+    });
+
+    await app.init();
+
+    expect(app.getSnapshot().cartOpen).toBe(false);
+    expect(app.getSnapshot().checkoutOpen).toBe(false);
+    expect(root.nodes["#cart-page"].hidden).toBe(true);
+    expect(root.nodes["#checkout"].hidden).toBe(true);
+    expect(root.nodes["#cart-count"].textContent).toBe("2");
+  });
+
+  it("toggles cart open/closed manually and closing cart hides checkout", async () => {
+    const root = createRootStub();
+    const app = createApp(root as unknown as Element, {
+      api: {
+        fetchCatalog: async () => ducks,
+        fetchDuckOfTheDay: async () => ducks[1],
+        fetchDuckDetail: async () => ducks[0],
+        fetchCart: async () => [
+          {
+            duckId: "philosopher",
+            quantity: 1,
+            name: "Philosopher Duck",
+            price: 12.5,
+          },
+        ],
+      },
+    });
+
+    await app.init();
+    app.toggleCart();
+    expect(root.nodes["#cart-page"].hidden).toBe(false);
+
+    app.proceedToCheckout();
+    expect(root.nodes["#checkout"].hidden).toBe(false);
+
+    app.closeCart();
+    expect(app.getSnapshot().checkoutOpen).toBe(false);
+    expect(root.nodes["#cart-page"].hidden).toBe(true);
+    expect(root.nodes["#checkout"].hidden).toBe(true);
+  });
+
+  it("keeps quiz in separate view from default shop viewport", async () => {
+    const root = createRootStub();
+    const app = createApp(root as unknown as Element, {
+      api: {
+        fetchCatalog: async () => ducks,
+        fetchDuckOfTheDay: async () => ducks[1],
+        fetchDuckDetail: async () => ducks[0],
+        fetchCart: async () => [],
+      },
+    });
+
+    await app.init();
+    expect(root.nodes["#shop-page"].hidden).toBe(false);
+    expect(root.nodes["#quiz-page"].hidden).toBe(true);
+
+    app.showQuizView();
+    expect(root.nodes["#shop-page"].hidden).toBe(true);
+    expect(root.nodes["#quiz-page"].hidden).toBe(false);
   });
 
   it("checkout required-field and invalid-email errors are displayed inline", async () => {
