@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_CART, addToCart, type Cart } from "./cart.js";
+import {
+  EMPTY_CART,
+  addToCart,
+  removeFromCart,
+  setQuantity,
+  type Cart,
+} from "./cart.js";
 import type { Duck } from "./duck.js";
 
 function fixtureDuck(overrides: Partial<Duck> = {}): Duck {
@@ -125,5 +131,82 @@ describe("addToCart", () => {
   it("zero-arg catalog form resolves against the real seed", () => {
     const result = addToCart(EMPTY_CART, "captain-quackbeard");
     expect(result.ok).toBe(true);
+  });
+});
+
+describe("setQuantity", () => {
+  const cart = frozenCart(
+    { duckId: "sir-quacksalot", quantity: 2 },
+    { duckId: "rare-duck", quantity: 1 },
+  );
+
+  it("replaces a line's quantity without reordering", () => {
+    const result = setQuantity(cart, "sir-quacksalot", 4, catalog);
+    expect(result).toEqual({
+      ok: true,
+      cart: [
+        { duckId: "sir-quacksalot", quantity: 4 },
+        { duckId: "rare-duck", quantity: 1 },
+      ],
+    });
+  });
+
+  it("removes the line on quantity 0", () => {
+    const result = setQuantity(cart, "sir-quacksalot", 0, catalog);
+    expect(result).toEqual({
+      ok: true,
+      cart: [{ duckId: "rare-duck", quantity: 1 }],
+    });
+  });
+
+  it("fails above stock, naming the duck and available count, cart unchanged", () => {
+    const snapshot = structuredClone(cart);
+    const result = setQuantity(cart, "rare-duck", 3, catalog);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("Rare Duck");
+      expect(result.message).toContain("2");
+    }
+    expect(cart).toEqual(snapshot);
+  });
+
+  it("fails when the duck has no line item in the cart", () => {
+    const snapshot = structuredClone(cart);
+    const result = setQuantity(cart, "gone-duck", 1, catalog);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("gone-duck");
+    }
+    expect(cart).toEqual(snapshot);
+  });
+
+  it.each([-1, 2.5, NaN])(
+    "fails on invalid quantity %d, cart unchanged",
+    (quantity) => {
+      const snapshot = structuredClone(cart);
+      const result = setQuantity(cart, "sir-quacksalot", quantity, catalog);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.message.length).toBeGreaterThan(0);
+      }
+      expect(cart).toEqual(snapshot);
+    },
+  );
+});
+
+describe("removeFromCart", () => {
+  const cart = frozenCart(
+    { duckId: "sir-quacksalot", quantity: 2 },
+    { duckId: "rare-duck", quantity: 1 },
+  );
+
+  it("removes a present line item", () => {
+    expect(removeFromCart(cart, "sir-quacksalot")).toEqual([
+      { duckId: "rare-duck", quantity: 1 },
+    ]);
+  });
+
+  it("is idempotent: an absent id yields an equivalent cart", () => {
+    expect(removeFromCart(cart, "not-in-cart")).toEqual(cart);
   });
 });

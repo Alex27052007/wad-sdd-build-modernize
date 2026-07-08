@@ -53,3 +53,49 @@ export function addToCart(
     : [...cart, { duckId, quantity }];
   return { ok: true, cart: next };
 }
+
+/** quantity 0 → removes the line (ok). Positive integer → replaces the
+ *  line's quantity, same stock check as addToCart. No such line, or
+ *  negative/non-integer quantity → { ok: false, message }. */
+export function setQuantity(
+  cart: Cart,
+  duckId: string,
+  quantity: number,
+  catalog?: Duck[],
+): CartResult {
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    return {
+      ok: false,
+      message: `Quantity must be a non-negative whole number, got ${quantity}.`,
+    };
+  }
+  const existing = cart.find((line) => line.duckId === duckId);
+  if (existing === undefined) {
+    return { ok: false, message: `No line item for duck id "${duckId}".` };
+  }
+  if (quantity === 0) {
+    return { ok: true, cart: removeFromCart(cart, duckId) };
+  }
+  const duck = getDuckById(duckId, catalog ?? listDucks());
+  if (duck === undefined) {
+    return { ok: false, message: `No duck with id "${duckId}".` };
+  }
+  if (quantity > duck.stock) {
+    return {
+      ok: false,
+      message: `Only ${duck.stock} of "${duck.name}" in stock.`,
+    };
+  }
+  return {
+    ok: true,
+    cart: cart.map((line) =>
+      line.duckId === duckId ? { duckId, quantity } : line,
+    ),
+  };
+}
+
+/** Idempotent: absent id returns an equivalent cart. Cannot fail, so it
+ *  returns Cart directly rather than a CartResult. */
+export function removeFromCart(cart: Cart, duckId: string): Cart {
+  return cart.filter((line) => line.duckId !== duckId);
+}
