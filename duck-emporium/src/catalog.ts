@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { assertDuck, type Duck } from "./duck.js";
+import { writeJsonAtomic } from "./persist.js";
 
 /** Absolute path to the default seed, resolved relative to this module,
  *  not the process CWD. */
@@ -52,6 +53,16 @@ export function loadCatalog(filePath: string = DEFAULT_SEED_PATH): Duck[] {
   });
 
   return parsed as Duck[];
+}
+
+/** Persists the catalog atomically (write-temp-then-rename). Records are
+ *  written as given — callers pass loaded records with updated stock, so
+ *  fields unknown to this module survive a round-trip. */
+export function saveCatalog(
+  catalog: Duck[],
+  filePath: string = DEFAULT_SEED_PATH,
+): void {
+  writeJsonAtomic(filePath, catalog);
 }
 
 /** All ducks in catalog order, including out-of-stock ones. With no

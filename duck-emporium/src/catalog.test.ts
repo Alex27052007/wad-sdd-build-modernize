@@ -8,6 +8,7 @@ import {
   getDuckById,
   listDucks,
   loadCatalog,
+  saveCatalog,
 } from "./catalog.js";
 import { assertDuck, type Duck } from "./duck.js";
 
@@ -108,6 +109,26 @@ describe("getDuckById", () => {
 
   it("zero-arg form resolves against the real seed", () => {
     expect(getDuckById("captain-quackbeard")?.name).toBe("Captain Quackbeard");
+  });
+});
+
+describe("saveCatalog", () => {
+  it("save-then-loadCatalog round-trips exactly", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "ducks-")), "catalog.json");
+    const ducks = [
+      fixtureDuck({ id: "a", stock: 2 }),
+      fixtureDuck({ id: "b", stock: 0 }),
+    ];
+    saveCatalog(ducks, file);
+    expect(loadCatalog(file)).toEqual(ducks);
+  });
+
+  it("preserves fields unknown to this story across save/load-raw", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "ducks-")), "catalog.json");
+    const withExtra = { ...fixtureDuck(), curator: "story-6" };
+    saveCatalog([withExtra as Duck], file);
+    const raw = JSON.parse(readFileSync(file, "utf8")) as unknown[];
+    expect(raw).toEqual([withExtra]);
   });
 });
 
