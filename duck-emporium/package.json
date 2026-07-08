@@ -1,0 +1,19 @@
+{
+  "name": "duck-emporium",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
+  }
+}
