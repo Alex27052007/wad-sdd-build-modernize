@@ -1,0 +1,134 @@
+[
+  {
+    "id": "captain-quackbeard",
+    "name": "Captain Quackbeard",
+    "category": "pirate",
+    "price": 14.99,
+    "tagline": "Terror of the seven bathtubs.",
+    "stock": 7,
+    "description": "Once the fiercest rubber pirate on the high seas of Lake Foam, Captain Quackbeard plundered soap dishes from Marseille to the Baltic before retiring to a quiet life of shelf duty. He still keeps a tiny cutlass tucked under one wing, just in case the loofah gets ideas.",
+    "traits": ["bold", "salty", "commanding"],
+    "powers": ["squeaks that summon bubbles"]
+  },
+  {
+    "id": "first-mate-paddles",
+    "name": "First Mate Paddles",
+    "category": "pirate",
+    "price": 9.99,
+    "tagline": "Loyal to the last bubble.",
+    "stock": 12,
+    "description": "Paddles signed on with Captain Quackbeard after losing a bet involving a rubber band and a bar of oatmeal soap. He has never regretted it once, mostly because he cannot read the contract. His balance in rough bathwater is the stuff of legend.",
+    "traits": ["loyal", "cheerful", "unsinkable"],
+    "powers": ["perfect balance in any turbulence"]
+  },
+  {
+    "id": "sir-quacksalot",
+    "name": "Sir Quacksalot",
+    "category": "classic",
+    "price": 4.99,
+    "tagline": "The original yellow knight of the tub.",
+    "stock": 25,
+    "description": "The duck that started it all. Sir Quacksalot has guarded the porcelain realm since the golden age of Saturday-night baths, armed with nothing but a noble bearing and an impeccably smooth beak. Generations of bathers have trusted him with their secrets.",
+    "traits": ["noble", "dependable", "timeless"],
+    "powers": []
+  },
+  {
+    "id": "plain-jane",
+    "name": "Plain Jane",
+    "category": "classic",
+    "price": 3.5,
+    "tagline": "No frills. All duck.",
+    "stock": 30,
+    "description": "Plain Jane rejects gimmicks. No hat, no cape, no glitter — just honest vulcanized craftsmanship and a gaze that says she has seen every bathroom trend come and go. Collectors call her the reference duck; she calls herself employed.",
+    "traits": ["honest", "steady", "unpretentious"],
+    "powers": []
+  },
+  {
+    "id": "grand-duke-mallard",
+    "name": "Grand Duke Mallard",
+    "category": "classic",
+    "price": 24.99,
+    "tagline": "Old money. Older rubber.",
+    "stock": 2,
+    "description": "Molded from a pre-war original in a small workshop that no longer exists, the Grand Duke carries himself with the weary elegance of aristocracy in exile. His paint is applied by hand, his monocle is molded on, and his opinion of foam parties is unprintable.",
+    "traits": ["aristocratic", "discerning", "aloof"],
+    "powers": ["appreciates in value while you bathe"]
+  },
+  {
+    "id": "santa-quack",
+    "name": "Santa Quack",
+    "category": "seasonal",
+    "price": 7.99,
+    "tagline": "He knows when you've been soaking.",
+    "stock": 0,
+    "description": "Every December, Santa Quack rides a sleigh made of washcloths across the bathroom sill, delivering tiny soaps to well-behaved sponges. Demand peaks in winter and he sells out fast — the beard, hand-flocked in white, is simply irresistible.",
+    "traits": ["jolly", "generous", "punctual"],
+    "powers": ["delivers gifts through drain pipes"]
+  },
+  {
+    "id": "count-quackula",
+    "name": "Count Quackula",
+    "category": "seasonal",
+    "price": 8.99,
+    "tagline": "He vants to float in your tub.",
+    "stock": 4,
+    "description": "Awakened only in October, Count Quackula sleeps the rest of the year in a soap dish shaped like a coffin. He is allergic to garlic bubble bath, terrified of rubber garlic, and inexplicably fond of lavender. His cape doubles as a tiny towel.",
+    "traits": ["dramatic", "nocturnal", "surprisingly polite"],
+    "powers": ["turns bathwater dramatically foggy", "immortality (limited warranty)"]
+  },
+  {
+    "id": "bunny-bill",
+    "name": "Bunny Bill",
+    "category": "seasonal",
+    "price": 6.49,
+    "tagline": "Part duck. Part rabbit. All spring.",
+    "stock": 9,
+    "description": "Bunny Bill emerged from the factory one spring with molded-on rabbit ears, and rather than call it a defect, marketing called it a miracle. He hides tiny soap eggs around the tub rim and refuses to confirm or deny his relationship to the Easter Bunny.",
+    "traits": ["springy", "mischievous", "optimistic"],
+    "powers": ["hides soap eggs no one can find"]
+  },
+  {
+    "id": "dr-quackenstein",
+    "name": "Dr. Quackenstein",
+    "category": "professional",
+    "price": 12.5,
+    "tagline": "It's alive! And it's waterproof!",
+    "stock": 6,
+    "description": "A visionary of bathtub science, Dr. Quackenstein earned his doctorate from the prestigious Institute of Applied Buoyancy with a thesis on reanimating flat bath toys. His laboratory is the soap shelf, his assistant is a loofah named Igor, and his safety record is, frankly, negotiable.",
+    "traits": ["brilliant", "eccentric", "slightly unhinged"],
+    "powers": ["reanimates deflated bath toys", "waterproof lightning"]
+  },
+  {
+    "id": "justice-quackner",
+    "name": "Justice Quackner",
+    "category": "professional",
+    "price": 13.99,
+    "tagline": "Order in the tub!",
+    "stock": 5,
+    "description": "The Honorable Justice Quackner presides over all disputes of the bath: soap-hogging, towel violations, and the eternal question of who splashed whom first. Her gavel is molded rubber, her wig is painted on, and her verdicts are final, fair, and delivered in a dignified squeak.",
+    "traits": ["fair", "stern", "incorruptible"],
+    "powers": ["verdict squeak that settles all arguments"]
+  },
+  {
+    "id": "astro-duck",
+    "name": "Astro Duck",
+    "category": "professional",
+    "price": 19.99,
+    "tagline": "One small step for duck, one giant splash for duckkind.",
+    "stock": 1,
+    "description": "Astro Duck trained for years in the zero-gravity environment of an upside-down bucket to become the first rubber duck rated for orbital bath missions. Her visor is genuine painted-on gold, and she has logged over ten thousand hours of continuous floating without a single complaint.",
+    "traits": ["fearless", "disciplined", "starry-eyed"],
+    "powers": ["survives re-entry from the top shelf", "floats in zero gravity"]
+  },
+  {
+    "id": "chef-canard",
+    "name": "Chef Canard",
+    "category": "professional",
+    "price": 11.25,
+    "tagline": "Tonight's special: bubble consommé.",
+    "stock": 8,
+    "description": "Trained in the great kitchens of Paris (a dollhouse, but a very nice one), Chef Canard brings haute cuisine to the humble bath. His signature dish is a bubble consommé with notes of coconut and chamomile, and he considers cold bathwater a personal insult to his profession.",
+    "traits": ["passionate", "perfectionist", "temperamental"],
+    "powers": ["whips any soap into a perfect foam"]
+  }
+]
