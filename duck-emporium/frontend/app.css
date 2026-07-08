@@ -1,0 +1,105 @@
+:root {
+  --paper: #f7f5ee;
+  --ink: #1f2a2f;
+  --muted: #607076;
+  --panel: #fffef9;
+  --line: #d6d4c9;
+  --accent: #0f7d65;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 80% 10%, #fef7d7 0%, transparent 28%),
+    radial-gradient(circle at 0% 100%, #d8f5e5 0%, transparent 25%),
+    var(--paper);
+  line-height: 1.45;
+}
+
+.skip-link {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  padding: 0.5rem 0.75rem;
+  background: var(--ink);
+  color: #fff;
+}
+
+.site-header {
+  padding: 1.25rem 1rem 0.5rem;
+}
+
+.site-header h1 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: clamp(1.5rem, 5vw, 2.4rem);
+  line-height: 1.15;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem 1.2rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.9rem;
+  box-shadow: 0 4px 14px rgba(31, 42, 47, 0.05);
+}
+
+.panel h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+}
+
+.panel p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.feature {
+  border-color: #f3d57a;
+  background: linear-gradient(135deg, #fff8dc, var(--panel));
+}
+
+@media (min-width: 720px) {
+  .layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  #catalog,
+  #duck-of-the-day {
+    grid-column: 1 / -1;
+  }
+}

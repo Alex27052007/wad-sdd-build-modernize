@@ -1,0 +1,48 @@
+export function createInitialState() {
+  return {
+    ducks: [],
+    filteredDucks: [],
+    duckOfTheDay: null,
+    selectedDuckId: null,
+    cart: [],
+    filters: {
+      query: "",
+      category: "",
+      minPrice: "",
+      maxPrice: "",
+    },
+    checkout: {
+      name: "",
+      email: "",
+      address: "",
+      card: "",
+      errors: {},
+    },
+    quiz: {
+      answers: {},
+      result: null,
+    },
+    loading: {},
+    errors: {},
+  };
+}
+
+let currentState = createInitialState();
+
+function clone(value) {
+  return structuredClone(value);
+}
+
+export function setState(patch) {
+  const base = clone(currentState);
+  const next = {
+    ...base,
+    ...clone(patch),
+  };
+  currentState = next;
+  return clone(currentState);
+}
+
+export function getState() {
+  return clone(currentState);
+}
