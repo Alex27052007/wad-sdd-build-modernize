@@ -8,6 +8,7 @@ import {
   type Cart,
 } from "./cart.js";
 import type { Duck } from "./duck.js";
+import { renderCart } from "./render.js";
 
 function fixtureDuck(overrides: Partial<Duck> = {}): Duck {
   return Object.freeze({
@@ -247,5 +248,40 @@ describe("removeFromCart", () => {
 
   it("is idempotent: an absent id yields an equivalent cart", () => {
     expect(removeFromCart(cart, "not-in-cart")).toEqual(cart);
+  });
+});
+
+describe("purity", () => {
+  it("a full operation sequence never mutates carts, catalog, or stock", () => {
+    const catalogSnapshot = structuredClone(catalog);
+
+    const afterAdd = addToCart(EMPTY_CART, "sir-quacksalot", 2, catalog);
+    if (!afterAdd.ok) throw new Error("add failed");
+    const addSnapshot = structuredClone(afterAdd.cart);
+
+    const afterSecondAdd = addToCart(afterAdd.cart, "rare-duck", 1, catalog);
+    if (!afterSecondAdd.ok) throw new Error("second add failed");
+    expect(afterAdd.cart).toEqual(addSnapshot);
+    const secondSnapshot = structuredClone(afterSecondAdd.cart);
+
+    const afterSet = setQuantity(afterSecondAdd.cart, "rare-duck", 2, catalog);
+    if (!afterSet.ok) throw new Error("setQuantity failed");
+    expect(afterSecondAdd.cart).toEqual(secondSnapshot);
+    const setSnapshot = structuredClone(afterSet.cart);
+
+    cartTotal(afterSet.cart, catalog);
+    renderCart(afterSet.cart, catalog);
+    removeFromCart(afterSet.cart, "sir-quacksalot");
+    expect(afterSet.cart).toEqual(setSnapshot);
+
+    expect(catalog).toEqual(catalogSnapshot);
+    expect(catalog.map((duck) => duck.stock)).toEqual(
+      catalogSnapshot.map((duck) => duck.stock),
+    );
+  });
+
+  it("EMPTY_CART stays empty after being used as an input", () => {
+    addToCart(EMPTY_CART, "sir-quacksalot", 1, catalog);
+    expect(EMPTY_CART).toEqual([]);
   });
 });
