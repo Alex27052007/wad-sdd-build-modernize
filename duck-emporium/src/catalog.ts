@@ -23,6 +23,80 @@ export interface DuckFilters {
   maxPrice?: number;
 }
 
+export interface CreateDuckInput {
+  name: string;
+  category: string;
+  price: number;
+  tagline: string;
+  description: string;
+  traits: string[];
+  stock: number;
+}
+
+export type AddDuckResult =
+  | { ok: true; duck: Duck }
+  | { ok: false; message: string };
+
+export interface AdminAddDuckRequest {
+  password: string | undefined;
+  payload: CreateDuckInput;
+}
+
+export interface AdminAddDuckResponse extends AddDuckResult {
+  status?: number;
+}
+
+function normalizeName(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+export function slugifyName(name: string): string {
+  const base = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return base.length > 0 ? base : "duck";
+}
+
+function validateCreateDuckInput(input: CreateDuckInput, catalog: Duck[]): string | undefined {
+  if (!isNonEmptyString(input.name)) {
+    return '"name" must be a non-empty string';
+  }
+  if (!isNonEmptyString(input.category)) {
+    return '"category" must be a non-empty string';
+  }
+  if (!isNonEmptyString(input.tagline)) {
+    return '"tagline" must be a non-empty string';
+  }
+  if (!isNonEmptyString(input.description)) {
+    return '"description" must be a non-empty string';
+  }
+  if (typeof input.price !== "number" || !Number.isFinite(input.price) || input.price < 0) {
+    return '"price" must be a non-negative finite number';
+  }
+  if (Math.round(input.price * 100) / 100 !== input.price) {
+    return '"price" must have at most two decimal places';
+  }
+  if (typeof input.stock !== "number" || !Number.isInteger(input.stock) || input.stock < 0) {
+    return '"stock" must be a non-negative integer';
+  }
+  if (!Array.isArray(input.traits) || input.traits.length === 0 || input.traits.some((trait) => !isNonEmptyString(trait))) {
+    return '"traits" must be a non-empty array of non-empty strings';
+  }
+
+  const normalizedName = normalizeName(input.name);
+  if (catalog.some((duck) => normalizeName(duck.name) === normalizedName)) {
+    return '"name" must be unique';
+  }
+
+  return undefined;
+}
+
 /** Returns a new array containing only ducks that satisfy all enabled
  *  filters. The input catalog is never mutated. */
 export function filterDucks(ducks: Duck[], filters: DuckFilters = {}): Duck[] {
@@ -107,6 +181,51 @@ export function saveCatalog(
   filePath: string = DEFAULT_SEED_PATH,
 ): void {
   writeJsonAtomic(filePath, catalog);
+}
+
+export function addDuckToCatalog(
+  input: CreateDuckInput,
+  catalog: Duck[],
+  filePath: string = DEFAULT_SEED_PATH,
+  logger: ((message: string) => void) | undefined = undefined,
+): AddDuckResult {
+  const validationMessage = validateCreateDuckInput(input, catalog);
+  if (validationMessage !== undefined) {
+    return { ok: false, message: validationMessage };
+  }
+
+  const slug = slugifyName(input.name);
+  const duck: Duck = {
+    id: slug,
+    name: input.name.trim(),
+    category: input.category.trim(),
+    price: input.price,
+    tagline: input.tagline.trim(),
+    description: input.description.trim(),
+    traits: input.traits.map((trait) => trait.trim()),
+    stock: input.stock,
+    powers: [],
+  };
+
+  const nextCatalog = [...catalog, duck];
+  saveCatalog(nextCatalog, filePath);
+  logger?.(`Added duck ${duck.name} at ${new Date().toISOString()}`);
+  return { ok: true, duck };
+}
+
+export function handleAdminAddDuck(
+  request: AdminAddDuckRequest,
+  catalog: Duck[],
+  filePath: string = DEFAULT_SEED_PATH,
+  logger: ((message: string) => void) | undefined = undefined,
+  env: NodeJS.ProcessEnv = process.env,
+): AdminAddDuckResponse {
+  const expectedPassword = env.ADMIN_PASSWORD;
+  if (expectedPassword === undefined || request.password !== expectedPassword) {
+    return { ok: false, status: 401, message: "invalid or missing password" };
+  }
+
+  return addDuckToCatalog(request.payload, catalog, filePath, logger);
 }
 
 /** All ducks in catalog order, including out-of-stock ones. With no

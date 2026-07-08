@@ -5,8 +5,10 @@ import { describe, expect, it } from "vitest";
 import {
   CatalogLoadError,
   DEFAULT_SEED_PATH,
+  addDuckToCatalog,
   filterDucks,
   getDuckById,
+  handleAdminAddDuck,
   listDucks,
   loadCatalog,
   saveCatalog,
@@ -123,6 +125,123 @@ describe("filterDucks", () => {
     const result = filterDucks(ducks, { query: "duck" });
     expect(result).not.toBe(ducks);
     expect(ducks).toEqual(original);
+  });
+});
+
+describe("addDuckToCatalog", () => {
+  it("adds a valid duck, persists it, and makes it visible after reload", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "ducks-")), "catalog.json");
+    const catalog = [fixtureDuck({ id: "a" })];
+    const events: string[] = [];
+
+    const result = addDuckToCatalog(
+      {
+        name: "New Duck",
+        category: "classic",
+        price: 9.5,
+        tagline: "Fresh and fabulous.",
+        description: "A newly added duck.",
+        traits: ["curious"],
+        stock: 3,
+      },
+      catalog,
+      file,
+      (message) => events.push(message),
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.duck.id).toBe("new-duck");
+      expect(loadCatalog(file)).toHaveLength(2);
+      expect(loadCatalog(file)[1]?.name).toBe("New Duck");
+    }
+    expect(events).toHaveLength(1);
+    expect(events[0]).toContain("New Duck");
+  });
+
+  it("rejects duplicate names, negative prices, negative stock, and missing fields", () => {
+    const catalog = [fixtureDuck({ name: "Existing Duck", id: "existing-duck" })];
+    expect(
+      addDuckToCatalog(
+        {
+          name: "  Existing Duck  ",
+          category: "classic",
+          price: 4.99,
+          tagline: "A duck",
+          description: "A duck",
+          traits: ["friendly"],
+          stock: 1,
+        },
+        catalog,
+      ),
+    ).toEqual({ ok: false, message: expect.stringContaining("name") });
+
+    expect(
+      addDuckToCatalog(
+        {
+          name: "Bad Price",
+          category: "classic",
+          price: -1,
+          tagline: "A duck",
+          description: "A duck",
+          traits: ["friendly"],
+          stock: 1,
+        },
+        catalog,
+      ),
+    ).toEqual({ ok: false, message: expect.stringContaining("price") });
+
+    expect(
+      addDuckToCatalog(
+        {
+          name: "Bad Stock",
+          category: "classic",
+          price: 4.99,
+          tagline: "A duck",
+          description: "A duck",
+          traits: ["friendly"],
+          stock: -1,
+        },
+        catalog,
+      ),
+    ).toEqual({ ok: false, message: expect.stringContaining("stock") });
+
+    expect(
+      addDuckToCatalog(
+        {
+          name: "Missing",
+          category: "",
+          price: 4.99,
+          tagline: "A duck",
+          description: "A duck",
+          traits: ["friendly"],
+          stock: 1,
+        },
+        catalog,
+      ),
+    ).toEqual({ ok: false, message: expect.stringContaining("category") });
+  });
+});
+
+describe("handleAdminAddDuck", () => {
+  it("rejects missing or incorrect passwords with 401-style failures", () => {
+    const result = handleAdminAddDuck({ password: undefined, payload: { name: "X", category: "classic", price: 1, tagline: "x", description: "x", traits: ["friendly"], stock: 1 } }, []);
+    expect(result).toEqual({ ok: false, status: 401, message: expect.stringContaining("password") });
+  });
+
+  it("accepts the correct password and returns the created duck", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "ducks-")), "catalog.json");
+    const result = handleAdminAddDuck(
+      { password: "secret", payload: { name: "Admin Duck", category: "classic", price: 1, tagline: "x", description: "x", traits: ["friendly"], stock: 1 } },
+      [],
+      file,
+      () => undefined,
+      { ADMIN_PASSWORD: "secret" },
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.duck.name).toBe("Admin Duck");
+    }
   });
 });
 
