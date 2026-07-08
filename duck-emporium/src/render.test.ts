@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { EMPTY_CART, type Cart } from "./cart.js";
 import type { Order } from "./checkout.js";
 import type { Duck } from "./duck.js";
 import {
   formatPrice,
+  renderCart,
   renderCatalog,
   renderDuckDetail,
   renderOrderConfirmation,
@@ -81,6 +83,43 @@ describe("renderCatalog", () => {
   it("renders the empty-state message for an empty catalog", () => {
     const rendered = renderCatalog([]);
     expect(rendered).toBe("The pond is empty — no ducks in the catalog yet.");
+  });
+});
+
+describe("renderCart", () => {
+  const catalog = Object.freeze([gifted, powerless]) as Duck[];
+  const cart: Cart = Object.freeze([
+    Object.freeze({ duckId: "captain-quackbeard", quantity: 2 }),
+    Object.freeze({ duckId: "plain-jane", quantity: 3 }),
+  ]);
+
+  it("renders one line per item with name, quantity, unit price, subtotal", () => {
+    const lines = renderCart(cart, catalog).split("\n");
+    expect(lines).toHaveLength(3); // 2 items + total
+    expect(lines[0]).toContain("Captain Quackbeard");
+    expect(lines[0]).toContain("2");
+    expect(lines[0]).toContain("14,99 €");
+    expect(lines[0]).toContain("29,98 €");
+    expect(lines[1]).toContain("Plain Jane");
+    expect(lines[1]).toContain("3");
+    expect(lines[1]).toContain("3,50 €");
+    expect(lines[1]).toContain("10,50 €");
+  });
+
+  it("ends with the formatted running total", () => {
+    expect(renderCart(cart, catalog)).toContain("40,48 €"); // 29.98 + 10.50
+  });
+
+  it("renders a friendly message for the empty cart, never an empty string", () => {
+    const rendered = renderCart(EMPTY_CART, catalog);
+    expect(rendered).toBe("Your cart is empty — the ducks await.");
+    expect(rendered).not.toBe("");
+  });
+
+  it("throws for a line whose duck is missing from the catalog", () => {
+    const stale: Cart = [{ duckId: "vanished-duck", quantity: 1 }];
+    expect(() => renderCart(stale, catalog)).toThrow(TypeError);
+    expect(() => renderCart(stale, catalog)).toThrow(/vanished-duck/);
   });
 });
 

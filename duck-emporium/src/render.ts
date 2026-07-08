@@ -1,3 +1,5 @@
+import { cartTotal, type Cart } from "./cart.js";
+import { getDuckById, listDucks } from "./catalog.js";
 import type { Order } from "./checkout.js";
 import type { Duck } from "./duck.js";
 
@@ -45,6 +47,31 @@ export function renderCatalog(ducks: Duck[]): string {
         `${formatPrice(duck.price)} — ${duck.tagline}`,
     )
     .join("\n");
+}
+
+/** Multi-line cart view: one line per item — duck name, quantity, unit
+ *  price, line subtotal (cent-safe) — then the running total. Empty cart
+ *  → friendly message, never an empty string. A line whose duckId is
+ *  missing from the catalog throws, as in cartTotal. */
+export function renderCart(cart: Cart, catalog?: Duck[]): string {
+  if (cart.length === 0) {
+    return "Your cart is empty — the ducks await.";
+  }
+  const ducks = catalog ?? listDucks();
+  const lines = cart.map((line) => {
+    const duck = getDuckById(line.duckId, ducks);
+    if (duck === undefined) {
+      throw new TypeError(
+        `cart line references unknown duck id "${line.duckId}"`,
+      );
+    }
+    const subtotal = (Math.round(duck.price * 100) * line.quantity) / 100;
+    return (
+      `${duck.name} × ${line.quantity} @ ${formatPrice(duck.price)}` +
+      ` = ${formatPrice(subtotal)}`
+    );
+  });
+  return [...lines, `Total: ${formatPrice(cartTotal(cart, ducks))}`].join("\n");
 }
 
 /** Plain-text order confirmation: order ID line, one line per item
