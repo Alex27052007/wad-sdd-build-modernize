@@ -1,3 +1,4 @@
+import type { Order } from "./checkout.js";
 import type { Duck } from "./duck.js";
 
 /** "4,99 €" — toFixed(2) with the dot swapped for a comma, no locale
@@ -44,6 +45,24 @@ export function renderCatalog(ducks: Duck[]): string {
         `${formatPrice(duck.price)} — ${duck.tagline}`,
     )
     .join("\n");
+}
+
+/** Plain-text order confirmation: order ID line, one line per item
+ *  ("name × quantity @ unit price = line subtotal", cent-safe), then the
+ *  formatted total. */
+export function renderOrderConfirmation(order: Order): string {
+  const lines = order.items.map((item) => {
+    const subtotal = (Math.round(item.price * 100) * item.quantity) / 100;
+    return (
+      `${item.name} × ${item.quantity} @ ${formatPrice(item.price)}` +
+      ` = ${formatPrice(subtotal)}`
+    );
+  });
+  return [
+    `Order confirmed — ${order.id}`,
+    ...lines,
+    `Total: ${formatPrice(order.total)}`,
+  ].join("\n");
 }
 
 /** Multi-line detail view: name, category, formatted price, tagline,

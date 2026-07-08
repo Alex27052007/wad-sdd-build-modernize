@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import type { Order } from "./checkout.js";
 import type { Duck } from "./duck.js";
 import {
   formatPrice,
   renderCatalog,
   renderDuckDetail,
+  renderOrderConfirmation,
   stockLabel,
 } from "./render.js";
 
@@ -79,6 +81,47 @@ describe("renderCatalog", () => {
   it("renders the empty-state message for an empty catalog", () => {
     const rendered = renderCatalog([]);
     expect(rendered).toBe("The pond is empty — no ducks in the catalog yet.");
+  });
+});
+
+describe("renderOrderConfirmation", () => {
+  const order: Order = {
+    id: "e9a2b3c4-0000-4000-8000-000000000042",
+    items: [
+      { duckId: "captain-quackbeard", name: "Captain Quackbeard", quantity: 2, price: 14.99 },
+      { duckId: "plain-jane", name: "Plain Jane", quantity: 3, price: 0.1 },
+    ],
+    total: 30.28,
+    createdAt: "2026-07-08T10:00:00.000Z",
+    customer: {
+      name: "Quincy Quacker",
+      email: "quincy@pond.example",
+      address: "1 Lily Pad Lane",
+    },
+  };
+
+  it("contains the order ID", () => {
+    expect(renderOrderConfirmation(order)).toContain(order.id);
+  });
+
+  it("renders one line per item with name, quantity, unit price, subtotal", () => {
+    const text = renderOrderConfirmation(order);
+    const itemLines = text
+      .split("\n")
+      .filter((line) => line.includes("Captain") || line.includes("Jane"));
+    expect(itemLines).toHaveLength(2);
+    expect(itemLines[0]).toContain("Captain Quackbeard");
+    expect(itemLines[0]).toContain("2");
+    expect(itemLines[0]).toContain("14,99 €");
+    expect(itemLines[0]).toContain("29,98 €");
+    expect(itemLines[1]).toContain("Plain Jane");
+    expect(itemLines[1]).toContain("3");
+    expect(itemLines[1]).toContain("0,10 €");
+    expect(itemLines[1]).toContain("0,30 €"); // cent-safe: not 0.30000000000000004
+  });
+
+  it("contains the formatted total", () => {
+    expect(renderOrderConfirmation(order)).toContain("30,28 €");
   });
 });
 
